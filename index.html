@@ -110,18 +110,9 @@
                             <div class="mt-1">
                                 <select id="kelas" name="kelas" required class="block w-full rounded-md border-0 py-2.5 px-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 transition-all duration-200 bg-white">
                                     <option value="" disabled selected>Pilih Kelas</option>
-                                    <optgroup label="Kelas X">
-                                        <option value="X-MIPA-1">X MIPA 1</option>
-                                        <option value="X-MIPA-2">X MIPA 2</option>
-                                    </optgroup>
-                                    <optgroup label="Kelas XI">
-                                        <option value="XI-MIPA-1">XI MIPA 1</option>
-                                        <option value="XI-IPS-1">XI IPS 1</option>
-                                    </optgroup>
-                                    <optgroup label="Kelas XII">
-                                        <option value="XII-MIPA-1">XII MIPA 1</option>
-                                        <option value="XII-IPS-1">XII IPS 1</option>
-                                    </optgroup>
+                                    <option value="VII">Kelas VII</option>
+                                    <option value="VIII">Kelas VIII</option>
+                                    <option value="IX">Kelas IX</option>
                                 </select>
                             </div>
                         </div>
@@ -236,7 +227,7 @@
             // PENTING: GANTI URL DI BAWAH INI DENGAN URL 
             // WEB APP DARI GOOGLE APPS SCRIPT ANDA
             // ==========================================
-            const scriptURL = '1V8BAWOOzGSQksH10xoMc2Khj4vg3V01gg2wSGqYs-lc';
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby1-3u-Pe1GyzaHjJ2z7M3GRi_9bmTFIRq-EOsv4mxybBv3G7SF2qwRuz1WPMb0ocQZGw/exec';
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggalMulai').setAttribute('min', today);
@@ -297,28 +288,27 @@
                 const file = fileInput.files[0];
                 formData.append('namaFileBukti', file ? file.name : '-');
 
-                // Proses mengirim data via API Fetch
+                // Proses mengirim data via API Fetch dengan mode no-cors
                 fetch(scriptURL, { 
                     method: 'POST', 
+                    mode: 'no-cors', // TAMBAHKAN BARIS INI: Mengatasi masalah CORS dengan Google Apps Script
                     body: formData 
                 })
-                .then(response => response.json()) // Ambil output berformat JSON dari Code.gs
-                .then(data => {
+                .then(() => {
+                    // Dalam mode 'no-cors', fetch akan selalu dianggap "berhasil" 
+                    // meskipun kita tidak bisa membaca JSON balasannya (opaque response)
                     setLoadingState(false);
-                    if(data.result === "success"){
-                        document.getElementById('successAlert').classList.remove('hidden');
-                        form.reset(); 
-                        fileNameDisplay.textContent = "PNG, JPG, PDF maksimal 2MB";
-                        fileNameDisplay.classList.remove('text-primary', 'font-semibold');
-                        document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        setTimeout(() => document.getElementById('successAlert').classList.add('hidden'), 7000);
-                    } else {
-                        showError("Terjadi error dari server: " + data.error);
-                    }
+                    document.getElementById('successAlert').classList.remove('hidden');
+                    form.reset(); 
+                    fileNameDisplay.textContent = "PNG, JPG, PDF maksimal 2MB";
+                    fileNameDisplay.classList.remove('text-primary', 'font-semibold');
+                    document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => document.getElementById('successAlert').classList.add('hidden'), 7000);
                 })
                 .catch(error => {
+                    // Catch ini hanya akan memicu jika terjadi gangguan jaringan berat (misal offline)
                     setLoadingState(false);
-                    showError("Gagal mengirim data. Cek koneksi atau pastikan URL Apps Script diatur 'Anyone / Siapa Saja'.");
+                    showError("Gagal mengirim data. Periksa koneksi internet Anda.");
                 });
             });
 
