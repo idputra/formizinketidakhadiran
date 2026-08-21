@@ -151,28 +151,6 @@
                 </div>
 
                 <div class="bg-gray-50 p-5 rounded-xl border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Bukti Pendukung</h3>
-                    <div class="sm:col-span-2">
-                        <label for="fileBukti" class="block text-sm font-medium leading-6 text-gray-900">Unggah Surat Dokter / Surat Izin Orang Tua</label>
-                        <div class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-8 hover:bg-gray-100 transition-colors duration-200 cursor-pointer" id="dropZone">
-                            <div class="text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-300" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd" />
-                                </svg>
-                                <div class="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
-                                    <label for="fileBukti" class="relative cursor-pointer rounded-md bg-transparent font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:text-blue-500">
-                                        <span>Pilih file</span>
-                                        <input id="fileBukti" name="fileBukti" type="file" class="sr-only" accept="image/*,.pdf">
-                                    </label>
-                                    <p class="pl-1">atau seret dan lepas ke sini</p>
-                                </div>
-                                <p class="text-xs leading-5 text-gray-500 mt-2" id="fileNameDisplay">PNG, JPG, PDF maksimal 2MB</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 p-5 rounded-xl border border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Informasi Orang Tua / Wali</h3>
                     <div class="grid grid-cols-1 gap-y-5 sm:grid-cols-2 sm:gap-x-6">
                         <div>
@@ -213,9 +191,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('izinForm');
-            const fileInput = document.getElementById('fileBukti');
-            const fileNameDisplay = document.getElementById('fileNameDisplay');
-            const dropZone = document.getElementById('dropZone');
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnLoader = document.getElementById('btnLoader');
@@ -230,74 +205,17 @@
                 document.getElementById('tanggalSelesai').setAttribute('min', this.value);
             });
 
-            fileInput.addEventListener('change', (e) => updateFileNameDisplay(e.target.files));
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-blue-50', 'border-primary'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-blue-50', 'border-primary'), false);
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                fileInput.files = e.dataTransfer.files; 
-                updateFileNameDisplay(fileInput.files);
-            }, false);
-
-            function updateFileNameDisplay(files) {
-                if (files && files.length > 0) {
-                    const file = files[0];
-                    if (file.size > 2 * 1024 * 1024) { // Max 2MB
-                        showError("Ukuran file terlalu besar. Maksimal 2MB.");
-                        fileInput.value = '';
-                        fileNameDisplay.textContent = "PNG, JPG, PDF maksimal 2MB";
-                        fileNameDisplay.classList.remove('text-primary', 'font-semibold');
-                    } else {
-                        fileNameDisplay.textContent = `File: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-                        fileNameDisplay.classList.add('text-primary', 'font-semibold');
-                        hideError();
-                    }
-                }
-            }
-
             form.addEventListener('submit', e => {
                 e.preventDefault(); 
                 hideError();
                 document.getElementById('successAlert').classList.add('hidden');
                 setLoadingState(true);
 
-                const file = fileInput.files[0];
-                
-                if (file) {
-                    // Jika ada file, convert ke Base64 menggunakan FileReader
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const base64String = event.target.result.split(',')[1];
-                        sendDataToGAS(base64String, file.name, file.type);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    // Jika tidak ada file, kirim data kosong untuk parameter file
-                    sendDataToGAS('', '', '');
-                }
-            });
-
-            function sendDataToGAS(base64Data, fileName, mimeType) {
                 // Ekstrak semua data teks dari form
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                
-                // Tambahkan data file ke dalam object
-                data.fileData = base64Data;
-                data.fileName = fileName;
-                data.mimeType = mimeType;
 
-                // Ubah ke format URLSearchParams agar lebih mudah ditangkap GAS 'doPost'
+                // Ubah ke format URLSearchParams
                 const searchParams = new URLSearchParams();
                 for (const key in data) {
                     searchParams.append(key, data[key]);
@@ -313,8 +231,6 @@
                     setLoadingState(false);
                     document.getElementById('successAlert').classList.remove('hidden');
                     form.reset(); 
-                    fileNameDisplay.textContent = "PNG, JPG, PDF maksimal 2MB";
-                    fileNameDisplay.classList.remove('text-primary', 'font-semibold');
                     document.getElementById('successAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     setTimeout(() => document.getElementById('successAlert').classList.add('hidden'), 7000);
                 })
@@ -322,7 +238,7 @@
                     setLoadingState(false);
                     showError("Gagal mengirim data. Periksa koneksi internet Anda.");
                 });
-            }
+            });
 
             function showError(msg) {
                 document.getElementById('alertMessage').textContent = msg;
